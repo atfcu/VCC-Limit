@@ -1,0 +1,76 @@
+[
+****************************************************************************************
+*****  Copyright 2023 CUTEK. All rights reserved.                     rev 01-2023  *****
+*****                                                                              *****
+*****  This licensed source code may not be reproduced, displayed, modified or     *****
+*****  distributed without the express prior written permission of the copyright   *****
+*****  holder. As implemented with CUTEK products, code is licensed only for the   *****
+*****  license term of the agreement. For further information, contact             *****
+*****  sales@cutek.com                                                             *****
+****************************************************************************************
+
+ Client name:  Austin Telco
+ File name:    CUTEK.CARDLIMIT.FM
+ Created by:   CUTEK, Inc. - Marc Middleton
+ Created on:   JUNE 2023
+ CUTEK Ticket: 33460 = June Retainer
+ 
+ Description:
+ We recently did some changes to our daily limit for our VCC. 
+ Our Card services needs a specfile where 
+ 	Card Types 30 and 51 
+ 		reset to 
+ 	POS: 3,000.00 
+ 		and 
+ 	ATM: 1,000.00. 
+ This is mainly for individuals who had the daily limit raised for the day 
+  or their limit has been changed manually. 
+ The specfile can be dropped in Github in the VCC-Limit repository. 
+ If you have any questions, please let me know. 
+ Thanks,
+ Jose Nava
+ Core Operations Analyst
+ 512-302-5555 ext 7369
+ 
+ Modified by:  
+ Modified on:  
+ Modification: 
+]
+TARGET=CARD
+
+DEFINE
+ USAGELIMIT = $1,000.00 [ATM Usage Limit]
+ POSLIMIT   = $3,000.00 [POS Limit]
+END
+
+SELECT
+(CARD:TYPE=30 OR CARD:TYPE=51) AND
+(CARD:CLOSEDATE='--/--/--' OR CARD:CLOSEDATE>SYSTEMDATE) AND
+(CARD:EXPIRATIONDATE='--/--/--' OR CARD:EXPIRATIONDATE>SYSTEMDATE)
+END
+
+PRINT TITLE="CARDLIMIT FM"
+ HEADER=""
+ IF CARD:USAGELIMIT<>USAGELIMIT OR CARD:POSLIMIT<>POSLIMIT THEN
+  DO
+   PRINT "ACCOUNT "+ACCOUNT:NUMBER+" MODIFY CARD LOC "
+   PRINT CARD:LOCATOR
+   NEWLINE
+   IF CARD:USAGELIMIT<>USAGELIMIT THEN
+    DO
+     COL=003 "CHANGE USAGELIMIT FROM"
+     COL=049 CARD:USAGELIMIT
+     COL=090 "TO"
+     COL=103 USAGELIMIT
+     NEWLINE    
+    END
+   IF CARD:POSLIMIT<>POSLIMIT THEN
+    DO
+     COL=003 "CHANGE POSLIMIT FROM"
+     COL=049 CARD:POSLIMIT
+     COL=090 "TO"
+     COL=103 POSLIMIT
+     NEWLINE 
+    END 
+  END
+END
